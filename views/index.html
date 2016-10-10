@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+
+<div class="table-responsive" >
+  <table class="table table-bordered" id="main-board">
+    <thead></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+
+$(document).ready(function() {
+
+  setupSocketClient();
+
+  for (var i = 0; i < {{ table_size.row_nums }}; i++) {
+    $("tbody").append("<tr class='row' data-row='" + i + "' id='row_" + i + "'></tr>");
+    var htmlCol = "";
+    for (var j = 0; j < {{ table_size.col_nums }}; j++) {
+      htmlCol += "<td><div class='column' data-col='" + j + "' data-row='" + i + "' id='col_" + i + "_" + j + "' style='width:20px;height:20px'></div></td>";
+    }
+    $("#row_" + i).append(htmlCol);
+  }
+
+})
+
+function setupSocketClient() {
+  var socket = io.connect('http://192.168.28.25:3000', {
+    query : "team=host"
+  });
+  socket.on("connect", function() {
+    alert("kết nối thành công");
+  });
+
+  socket.on("change_turn", function(data) {
+
+    var div = $("#col_" + data.point.x + "_" + data.point.y);
+    if (data.turn == "o") {
+      div.html("<p style='color:red'>x</p>");
+    }
+    else {
+      div.html("<p style='color:blue'>o</p>");
+    }
+
+  });
+
+  socket.on("new_user_connected", function(data){
+    // document.getElementById("chatbox").innerHTML = document.getElementById("chatbox").innerHTML + "<div>"+ id +" connected</div>";
+    alert("Người chơi " + data.team + " đã tham gia!");
+
+  });
+
+  socket.on("team_disconnected", function(data) {
+    alert("Người chơi " + data.team + " đã thoát. Chấm dứt game!");
+  });
+
+}
+
+</script>
+{% endblock %}

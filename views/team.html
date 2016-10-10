@@ -1,0 +1,158 @@
+<!-- {% extends "layout.html" %} -->
+
+{% block content %}
+
+<link rel="stylesheet" type="text/css" href="../bower_components/bootstrap/dist/css/bootstrap.min.css">
+
+<div class="table-responsive" >
+  <div >
+    <input type="button" id="btnNewGame" class="btn btn-default">Tạo game mới</input>
+
+  </div>
+  <table class="table table-bordered" id="main-board">
+    <thead></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+  var checkedType = "{{ team }}";
+  var isMyTurn = checkedType == "x";
+
+  var createNewGame = function() {
+    checkedType = "{{ team }}";
+    isMyTurn = checkedType == "x";
+
+    $("tbody").empty();
+    drawCaroBoard();
+  }
+
+  var drawCaroBoard = function() {
+    for (var i = 0; i < {{ table_size.row_nums }}; i++) {
+      $("tbody").append("<tr class='row' data-row='" + i + "' id='row_" + i + "'></tr>");
+      var htmlCol = "";
+      for (var j = 0; j < {{ table_size.col_nums }}; j++) {
+        htmlCol += "<td><div class='column' data-col='" + j + "' data-row='" + i + "' id='col_" + i + "_" + j + "' style='width:20px;height:20px'></div></td>";
+      }
+      $("#row_" + i).append(htmlCol);
+
+    }
+
+    $(".column").on("click", function(event) {
+      if (!isMyTurn) {
+        alert("Không phải lượt của bạn!");
+        return;
+      }
+
+      if ($(this).children().length > 0) {
+        return;
+      }
+
+      var col = $(this).attr("data-col");
+      var row = $(this).attr("data-row");
+      // alert('Row: ' + row + ', Column: ' + col);
+
+      if (checkedType == "x") {
+        $(this).html("<p style='color:red'>" + checkedType + "</p>");
+      }
+      else {
+        $(this).html("<p style='color:blue'>" + checkedType + "</p>");
+      }
+
+      socket.emit("move", {
+        "x"    : row,
+        "y"    : col,
+        "type" : checkedType
+      })
+    });
+  }
+
+  var socket = io.connect('http://192.168.28.25:3000', {
+    query : "team=" + checkedType
+  });
+
+  socket.on("connect", function() {
+    alert("kết nối thành công, Bạn là team: " + checkedType);
+  });
+  socket.on("change_turn", function(data) {
+    let gameResult = data.gameResult;
+    if (gameResult == checkedType) {
+      alert("Bạn đã thắng!");
+      createNewGame();
+      return;
+    }
+    if (gameResult != "") {
+      alert("Bạn đã thua!");
+      createNewGame();
+      return;
+    }
+
+    isMyTurn = data.turn == checkedType;
+
+    var div = $("#col_" + data.point.x + "_" + data.point.y);
+    if (data.turn == "o") {
+      div.html("<p style='color:red'>x</p>");
+    }
+    else {
+      div.html("<p style='color:blue'>o</p>");
+    }
+
+    if (data.gameResult != "") {
+      alert("Người chơi " + data.gameResult + " đã thắng! Trò chơi kết thúc");
+      createNewGame();
+      return;
+    }
+
+    if (isMyTurn) {
+      alert("Đến lượt bạn!");
+    }
+
+  });
+
+  socket.on("new_user_connected", function(data){
+    if (data.team != checkedType) {
+      alert("Người chơi " + data.team + " vừa kết nối!");
+    }
+  });
+
+  socket.on("connect_refuse", function(data) {
+    alert("Bạn không thể làm " + connTeam + " do trùng! Hãy chọn lượt chơi khác!");
+  })
+
+  socket.on("time_out", function(data) {
+    let gameResult = data.gameResult;
+    if (gameResult == checkedType) {
+      alert("Bạn đã thua vì hết thời gian đi nước tiếp theo!");
+      createNewGame();
+      return;
+    }
+    if (gameResult != "") {
+      alert("Bạn đã thắng vì người chơi " + gameResult + " hết thời gian đi nước tiếp theo!");
+      createNewGame();
+      return;
+    }
+  });
+
+  socket.on("team_disconnected", function(data) {
+    if (data.team != checkedType) {
+      alert("Người chơi " + data.team + " đã thoát. Chấm dứt game!");
+    }
+  });
+
+  $(document).ready(function() {
+
+    createNewGame();
+
+    $(window).on("unload", function() {
+      // socket.disconnect();
+      var r = confirm("Bạn muốn rời khỏi trận đấu?");
+      if (r) {
+        socket.disconnect();
+      }
+    });
+
+  })
+
+</script>
+
+{% endblock %}

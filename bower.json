@@ -1,0 +1,23 @@
+{
+  "name": "ai_caro_server",
+  "description": "server cho caro môn ai",
+  "main": "index.js",
+  "authors": [
+    "BinhNT"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies" : {
+    "socket.io-client"  : "*",
+    "bootstrap"         : "*",
+    "jquery"            : "*"
+  }
+}

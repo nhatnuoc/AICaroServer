@@ -1,0 +1,24 @@
+<script src="/bower_components/jquery/dist/jquery.min.js"></script>
+<script src="/bower_components/socket.io-client/socket.io.js"></script>
+<!-- <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css"> -->
+<html>
+  <head>
+    <title>Caro Server</title>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="sidebar" style="float: left; width: 50px; border: 1px solid #DDD;" id="sidebar-left">
+        {% include "sidebar.html" %}
+      </div>
+      <div class="content" style="float: left; width: calc(100% - 120px); border: 1px solid #DDD; margin-left: 10px;">
+        {% block content%} {% endblock%}
+      </div>
+      <div class="sidebar" style="float: right; width: 50px; border: 1px solid #DDD;" id="sidebar-right">
+        {% include "sidebar.html" %}
+      </div>
+
+      <div class="clearfix" style="clear:both"></div>
+    </div>
+  </body>
+</html>
